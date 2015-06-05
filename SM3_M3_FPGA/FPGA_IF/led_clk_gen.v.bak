@@ -1,0 +1,62 @@
+module led_clk_gen (clk, nreset, fclk, led_clk, led1, led2, led3, led4, led5, led6, led7, led8);
+	input clk, nreset, fclk;
+	output reg led_clk;
+	output reg [7:0] led1, led2, led3, led4, led5, led6, led7, led8;
+	
+	reg [7:0] clk_cnt;
+	wire iclk;
+	reg [3:0] cnt;
+	
+	always @(posedge clk or negedge nreset) begin
+		if (nreset == 1'b0) begin
+			clk_cnt <= 0;
+		end else begin
+			clk_cnt <= clk_cnt+1;
+		end
+	end
+	
+	always @(posedge clk_cnt[1] or negedge nreset) begin
+		if (nreset == 1'b0) begin
+			cnt <= 0;
+			led_clk <= 1'b0;
+		end else begin
+			if (cnt == 6) begin
+				cnt <= 0;
+				led_clk <= 1'b1;
+			end else begin
+				cnt <= cnt+1;
+				led_clk <= 1'b0;
+			end
+		end
+	end
+	
+	always @(posedge iclk or negedge nreset) begin
+		if (nreset == 1'b0) begin
+			cnt <= 0;
+		else begin
+			if (cnt == 13) cnt <= 0;
+			else           cnt <= cnt+1;
+		end
+	end
+	
+	always @(posedge iclk or negedge nreset) begin
+		if (nreset == 1'b0) begin
+			led1 <= 0;
+			led2 <= 0;
+			led3 <= 0;
+			led4 <= 0;
+			led5 <= 0;
+			led6 <= 0;
+			led7 <= 0;
+			led8 <= 0;
+		end else
+			if (cnt == 0) begin
+				led1 <= 8'b11111111;
+				led2 <= 8'b01111111;
+				led3 <= 8'b00111111;
+				led4 <= 8'b00011111;
+				led5 <= 8'b00001111;
+				led6 <= 8'b00000111;
+				led7 <= 8'b00000011;
+				led8 <= 8'b00000001;
+			end

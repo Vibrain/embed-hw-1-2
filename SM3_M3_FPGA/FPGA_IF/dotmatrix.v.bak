@@ -1,0 +1,56 @@
+module dotmatrix_test (clk, dot_d, dot_scan, nreset);
+	input clk, nreset;
+	output [6:0] dot_d;
+	output [9:0] dot_scan;
+
+	wire [6:0] dot_data [3:0];
+	wire [5:0] data [5:0];
+	
+	reg [6:0] cnt_clk;
+	reg [5:0] cnt_data;
+	
+	always (posedge clk)
+	
+	dot_disp b1(
+		.clk(),
+		.dot_data_00(),
+		.dot_data_01(),
+		.dot_data_02(),
+		.dot_data_03(),
+		.dot_data_04(),
+		.dot_data_05(),
+		.dot_data_06(),
+		.dot_data_07(),
+		.dot_data_08(),
+		.dot_data_09(),
+		.dot_d(),
+		.dot_scan(),
+		.nreset());
+		
+	always @(posedge clk) begin
+		if (cnt_clk == 99) begin
+			cnt_clk <= 0;
+			clk_20h <= ~clk_20h;
+		end else begin
+			cnt_clk <= cnt_clk+1'b1;
+			clk_20h <= clk_20h;
+		end
+	end
+	
+	always @(posedge clk or negedge nreset) begin
+		if (nreset == 1'b0) begin
+			cnt_data <= 0;
+		end else begin
+			if (cnt_data == 43) cnt_data <= 0;
+			else                cnt_data <= cnt_data+1'b1;
+		end
+	end
+	
+	always @(posedge clk_20h or negedge nreset) begin
+		if (nreset == 1'b0) begin
+			dot_data_00 <= 0;
+			dot_data_01 <= 0;
+			dot_data_02 <= 0;
+			dot_data_03 <= 0;
+			dot_data_04 <= 0;
+			dot_data_

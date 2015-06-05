@@ -1,0 +1,23 @@
+module led_pwm_gen (clk, nreset, data_a, data_b, data_c, data_d, data_e, data_f, data_g, data_h, pwd, led, fclk);
+	input clk, nreset;
+	input [7:0] data_a, data_b, data_c, data_d, data_e, data_f, data_g, data_h;
+	output [7:0] pwm;
+	output [7:0] led;
+	output fclk;
+	
+	reg [7:0] cnt;
+	wire [7:0] shades;
+	
+	always @(posedge clk or nreset) begin
+		if (neset == 1'b0) begin
+			cnt <= 0;
+			fclk <= 1'b0;
+		end
+		else if (clk = 1'b1) begin
+			if (cnt == 255) begin
+				cnt <= 0;
+				fclk <= 1'b1;
+			end else beign
+				cnt <= cnt+1;
+				fclk <= 1'b0;
+			end

@@ -1,0 +1,242 @@
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+
+entity lcd_demo1 is
+generic(
+	cnt_max : integer := 4; 
+	lcd_char : integer := 16;
+	stable_delay : integer := 19;
+	display_delay : integer := 399 
+);
+port(
+	clk 		: in std_logic;			-- 1kHz Clock	
+	rst			: in std_logic;
+	
+	cnt_1		: in std_logic_vector(7 downto 0);
+	cnt_10		: in std_logic_vector(7 downto 0);
+	sec_1		: in std_logic_vector(7 downto 0);
+	sec_10		: in std_logic_vector(7 downto 0);
+	min_1		: in std_logic_vector(7 downto 0);
+	min_10		: in std_logic_vector(7 downto 0);
+	hour_1		: in std_logic_vector(7 downto 0);
+	hour_10		: in std_logic_vector(7 downto 0);
+	
+
+	lcd_e 		: out std_logic;
+	lcd_rs 		: out std_logic;
+	lcd_rw 		: out std_logic;
+	lcd_data 	: out std_logic_vector(7 downto 0)
+);
+end lcd_demo1;
+
+architecture hb of lcd_demo1 is
+
+type lcd_state is ( 
+	delay_20m, 
+	function_set,
+	entry_mode, 
+	disp_on, 
+	disp_line1, 
+	disp_line2
+);
+
+signal lcd_routine 		: lcd_state;
+signal cnt_clk 			: integer range 0 to cnt_max;
+signal cnt_clk_half 	: integer range 0 to cnt_max;
+
+signal cnt_delay_20m 	: integer range 0 to stable_delay;
+signal cnt_delay_2s 	: integer range 0 to display_delay;
+signal cnt_line 		: integer range 0 to lcd_char;
+signal cnt_brightness 	: std_logic_vector(1 downto 0);
+
+type ar_lcd_data is array (0 to lcd_char) of std_logic_vector(7 downto 0);
+signal reg_lcd_data1 	: ar_lcd_data;
+signal reg_lcd_data2 	: ar_lcd_data;
+
+begin
+
+lcd_rw <= '0';
+
+reg_lcd_data1(0)  <= "10000000";  	-- line1 address
+reg_lcd_data1(1)  <= "01001000";	-- H
+reg_lcd_data1(2)  <= "01000010";	-- B
+reg_lcd_data1(3)  <= "01000101";	-- E
+reg_lcd_data1(4)  <= "00101101";	-- -
+reg_lcd_data1(5)  <= "01010011";	-- S
+reg_lcd_data1(6)  <= "01001101";	-- M
+reg_lcd_data1(7)  <= "00110011";	-- 3
+reg_lcd_data1(8)  <= "00101101";	-- -
+reg_lcd_data1(9)  <= "01010011";	-- S
+reg_lcd_data1(10) <= "01010110";	-- V 
+reg_lcd_data1(11) <= "00110010";	-- 2
+reg_lcd_data1(12) <= "00110001";	-- 1
+reg_lcd_data1(13) <= "00110000";	-- 0
+reg_lcd_data1(14) <= "00100000";	-- 
+reg_lcd_data1(15) <= "01001101";	-- M
+reg_lcd_data1(16) <= "00110011";	-- 3
+
+reg_lcd_data2(0)  <= "11000000"; 	-- line2 address
+reg_lcd_data2(1)  <= "01010100";	-- T
+reg_lcd_data2(2)  <= "01101001";	-- i
+reg_lcd_data2(3)  <= "01101101";	-- m
+reg_lcd_data2(4)  <= "01100101";	-- e
+reg_lcd_data2(5)  <= "00100000";	-- 
+reg_lcd_data2(6)  <= hour_10;		-- h10
+reg_lcd_data2(7)  <= hour_1;		-- h1
+reg_lcd_data2(8)  <= "00111010";	-- :
+reg_lcd_data2(9)  <= min_10;		-- m10
+reg_lcd_data2(10) <= min_1;			-- m1
+reg_lcd_data2(11) <= "00111010";	-- :
+reg_lcd_data2(12) <= sec_10;		-- s10
+reg_lcd_data2(13) <= sec_1;			-- s1
+reg_lcd_data2(14) <= "00111010";	-- :
+reg_lcd_data2(15) <= cnt_10;		-- c10
+reg_lcd_data2(16) <= cnt_1;			-- c1
+                                	
+
+process (rst, clk)
+begin
+	if rst= '0' then
+		cnt_clk <= 0;
+	elsif clk'event and clk = '1' then
+		if cnt_clk = cnt_max then
+			cnt_clk <= 0;
+		else
+			cnt_clk <= cnt_clk + 1;
+		end if;
+	end if;
+end process;
+
+process (rst, clk)
+begin
+	if rst= '0' then
+		cnt_delay_20m <= 0;
+	elsif clk'event and clk = '1' then
+		if lcd_routine = delay_20m then
+			if cnt_clk = cnt_max then
+				if cnt_delay_20m = stable_delay then
+					cnt_delay_20m <= 0;
+				else
+					cnt_delay_20m <= cnt_delay_20m + 1;
+				end if;
+			end if;
+		else
+			cnt_delay_20m <= 0;
+		end if;
+	end if;
+end process;
+
+process (rst, clk)
+begin
+	if rst= '0' then
+		cnt_line <= 0;
+	elsif clk'event and clk = '1' then
+		if lcd_routine = disp_line1 or lcd_routine = disp_line2 then
+			if cnt_clk = cnt_max then
+				if cnt_line = lcd_char then
+					cnt_line <= 0;
+				else
+					cnt_line <= cnt_line + 1;
+				end if;
+			end if;
+		else
+			cnt_line <= 0;
+		end if;
+	end if;
+end process;
+
+process (rst, clk)
+begin
+	if rst= '0' then
+		lcd_routine <= delay_20m;
+	elsif clk'event and clk = '1' then
+		if cnt_clk = cnt_max then
+			case lcd_routine is
+				when delay_20m =>
+					if cnt_delay_20m = stable_delay then
+						lcd_routine <= function_set;
+					end if;
+				when function_set =>
+					lcd_routine <= entry_mode;
+				when entry_mode =>
+					lcd_routine <= disp_on;
+				when disp_on =>
+					lcd_routine <= disp_line1;
+				when disp_line1 =>
+					if cnt_line = lcd_char then
+						lcd_routine <= disp_line2;
+					end if;
+				when disp_line2 =>
+					if cnt_line = lcd_char then
+						lcd_routine <= disp_line1;
+					end if;
+			end case;
+		end if;
+	end if;
+end process; 		
+
+cnt_clk_half <= cnt_max - 1;
+						
+process (rst, clk)
+begin
+	if rst= '0' then
+		lcd_e <= '0';
+	elsif clk'event and clk = '1' then
+		case lcd_routine is
+			when delay_20m =>
+				lcd_e <= '0';
+			when function_set to disp_line2 =>
+				if cnt_clk >= 1 and (cnt_clk <= cnt_clk_half) then
+					lcd_e <= '1';
+				else
+					lcd_e <= '0';
+				end if;
+			when others => null;
+		end case;
+	end if;
+end process;				
+					
+process (rst, clk)
+begin
+	if rst= '0' then
+		lcd_rs <= '0';
+	elsif clk'event and clk = '1' then
+		if lcd_routine = disp_line1 or lcd_routine = disp_line2 then
+			if cnt_line = 0 then
+				lcd_rs <= '0';
+			else
+				lcd_rs <= '1';
+			end if;
+		else
+			lcd_rs <= '0';
+		end if;
+	end if;
+end process;
+
+
+process (rst, clk)
+begin
+	if rst= '0' then
+		lcd_data <= "00000000";
+	elsif clk'event and clk = '1' then
+		case lcd_routine is
+			when delay_20m =>
+				lcd_data <= "00000000";
+			when function_set =>
+				lcd_data <= "00111000";
+			when entry_mode =>
+				lcd_data <= "00000110";
+			when disp_on =>
+				lcd_data <= "00001100";
+			when disp_line1 =>
+				lcd_data <= reg_lcd_data1(cnt_line);
+			when disp_line2 =>
+				lcd_data <= reg_lcd_data2(cnt_line);
+			when others => null;
+		end case;
+	end if;
+end process; 	
+
+
+end hb;

@@ -1,0 +1,13 @@
+
+State Machine - |M3|lcd_demo:inst8|lcd_routine
+Name lcd_routine.DISP_LINE5 lcd_routine.DISP_LINE4 lcd_routine.DISP_LINE3 lcd_routine.REST_1000m lcd_routine.DISP_LINE2 lcd_routine.DISP_LINE1 lcd_routine.SRAM_WRITE_0x02 lcd_routine.SRAM_WRITE_0x01 lcd_routine.SRAM_WRITE_0x00 lcd_routine.DELAY_20M 
+lcd_routine.DELAY_20M 0 0 0 0 0 0 0 0 0 0 
+lcd_routine.SRAM_WRITE_0x00 0 0 0 0 0 0 0 0 1 1 
+lcd_routine.SRAM_WRITE_0x01 0 0 0 0 0 0 0 1 0 1 
+lcd_routine.SRAM_WRITE_0x02 0 0 0 0 0 0 1 0 0 1 
+lcd_routine.DISP_LINE1 0 0 0 0 0 1 0 0 0 1 
+lcd_routine.DISP_LINE2 0 0 0 0 1 0 0 0 0 1 
+lcd_routine.REST_1000m 0 0 0 1 0 0 0 0 0 1 
+lcd_routine.DISP_LINE3 0 0 1 0 0 0 0 0 0 1 
+lcd_routine.DISP_LINE4 0 1 0 0 0 0 0 0 0 1 
+lcd_routine.DISP_LINE5 1 0 0 0 0 0 0 0 0 1 

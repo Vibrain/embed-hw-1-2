@@ -1,0 +1,76 @@
+module lcd_demo (clk, rst, cnt_1, cnt_10, sec_1, sec_10, min_1, min_10, hour_1, hour_10, lcd_e, lcd_rs, lcd_rw, lcd_data);
+	parameter CNT_MAX = 4;
+	parameter LCD_CHAR = 16;
+	parameter STABLE_DELAY = 19;
+	parameter DISPLAY_DELAY = 399;
+	
+	input clk, rst
+	input [7:0] cnt_1, cnt_10, sec_1, sec_10, min_1, min_10, hour_1, hour_10;
+	
+	output lcd_e, lcd_rw, lcd_rw;
+	output lcd_data;
+	
+	reg [2:0] cnt_clk;
+	reg [2:0] cnt_clk_half;
+	reg [4:0] cnt_delay_20m;
+	reg [7:0] cnt_delay_2s;
+	reg [4:0] cnt_line;
+	reg [1:0] cnt_brightness;
+	
+	reg [7:0] reg_lcd_data1 [LCD_CHAR:0];
+	reg [7:0] reg_lcd_data2 [LCD_CHAR:0];
+	
+	assign lcd_rw = 1'b0;
+	
+	assign reg_lcd_data1[0]  = 8'b10000000;
+	assign reg_lcd_data1[1]  = "H";
+	assign reg_lcd_data1[2]  = "B";
+	assign reg_lcd_data1[3]  = "E";
+	assign reg_lcd_data1[4]  = "-";
+	assign reg_lcd_data1[5]  = "S";
+	assign reg_lcd_data1[6]  = "M";
+	assign reg_lcd_data1[7]  = "3";
+	assign reg_lcd_data1[8]  = "-";
+	assign reg_lcd_data1[9]  = "S";
+	assign reg_lcd_data1[10] = "V";
+	assign reg_lcd_data1[11] = "2";
+	assign reg_lcd_data1[12] = "1";
+	assign reg_lcd_data1[13] = "0";
+	assign reg_lcd_data1[14] = " ";
+	assign reg_lcd_data1[15] = "M";
+	assign reg_lcd_data1[16] = "3";
+	
+	assign reg_lcd_data2[0]  = 8'b11000000;
+	assign reg_lcd_data2[1]  = "T";
+	assign reg_lcd_data2[2]  = "i";
+	assign reg_lcd_data2[3]  = "m";
+	assign reg_lcd_data2[4]  = "e";
+	assign reg_lcd_data2[5]  = " ";
+	assign reg_lcd_data2[6]  = hour_10;
+	assign reg_lcd_data2[7]  = hour_1;
+	assign reg_lcd_data2[8]  = ":";
+	assign reg_lcd_data2[9]  = min_10;
+	assign reg_lcd_data2[10] = min_1;
+	assign reg_lcd_data2[11] = ":";
+	assign reg_lcd_data2[12] = sec_10;
+	assign reg_lcd_data2[13] = sec_1;
+	assign reg_lcd_data2[14] = ":";
+	assign reg_lcd_data2[15] = cnt_10;
+	assign reg_lcd_data2[16] = cnt_1;
+	
+	always @(posedge clk or negedge rst) begin
+		if (rst == 1'b0) begin
+			cnt_clk <= 0;
+		end else begin
+			if (cnt_clk == CNT_MAX) cnt_clk <= 0;
+			else                    cnt_clk <= cnt_clk+1'b1;
+		end
+	end
+	
+	always @(posedge clk or negedge rst) begin
+		if (rst == 1'b0) begin
+			cnt_delay_20m <= 0;
+	
+	
+	
+	
